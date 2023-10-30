@@ -1,0 +1,210 @@
+openapi: 3.0.3
+info:
+  title: B2B client external balance API
+  version: '1.0'
+servers: []
+paths:
+  '/v1/customers/{customer_id}/balances/{balance_id}/debit':
+    parameters:
+      - schema:
+          type: string
+        name: customer_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: balance_id
+        in: path
+        required: true
+    post:
+      summary: Debit funds.
+      description: Subtract some funds from customer's balance.
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - request_id
+                - amount
+                - currency_code
+                - comment
+              properties:
+                request_id:
+                  type: string
+                  description: Request ID for request idempotency.
+                amount:
+                  type: string
+                  description: Amount for debit.
+                currency_code:
+                  $ref: '#/components/schemas/CurrencyCode'
+                comment:
+                  type: string
+                  description: The reason to debit funds.
+      responses:
+        '201':
+          description: Debit operation has been successfully done.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - customer_id
+                  - balance_id
+                  - amount
+                  - balance_current_amount
+                  - currency_code
+                properties:
+                  customer_id:
+                    type: string
+                  balance_id:
+                    type: string
+                  amount:
+                    type: string
+                    description: Debited amount.
+                  balance_current_amount:
+                    type: string
+                    description: The balance amount after debit operation.
+                  currency_code:
+                    $ref: '#/components/schemas/CurrencyCode'
+        '400':
+          description: Bad request.
+        '402':
+          description: Insufficient funds.
+        '403':
+          description: Access to server is forbidden.
+        '404':
+          description: The customer or the balance is not found.
+        '451':
+          description: The customer is not allowed access.
+  '/v1/customers/{customer_id}/balances/{balance_id}/credit':
+    parameters:
+      - schema:
+          type: string
+        name: customer_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: balance_id
+        in: path
+        required: true
+    post:
+      summary: Credit funds.
+      description: Add some funds to customer's balance.
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - request_id
+                - amount
+                - currency_code
+                - comment
+              properties:
+                request_id:
+                  type: string
+                  description: Request ID for request idempotency.
+                amount:
+                  type: string
+                  description: Amount for credit.
+                currency_code:
+                  $ref: '#/components/schemas/CurrencyCode'
+                comment:
+                  type: string
+                  description: The reason to credit funds.
+      responses:
+        '201':
+          description: Credit operation has been successfully done.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - customer_id
+                  - balance_id
+                  - amount
+                  - balance_current_amount
+                  - currency_code
+                properties:
+                  customer_id:
+                    type: string
+                  balance_id:
+                    type: string
+                  amount:
+                    type: string
+                    description: Credited amount.
+                  balance_current_amount:
+                    type: string
+                    description: The balance amount after credit operation.
+                  currency_code:
+                    $ref: '#/components/schemas/CurrencyCode'
+        '400':
+          description: Bad request.
+        '403':
+          description: Access to server is forbidden.
+        '404':
+          description: The customer or the balance is not found.
+        '451':
+          description: The customer is not allowed access.
+  '/v1/customers/{customer_id}/balances/{balance_id}':
+    parameters:
+      - schema:
+          type: string
+        name: customer_id
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: balance_id
+        in: path
+        required: true
+    get:
+      summary: Get the customer balance amount.
+      description: Retrieve the information of the customer balance.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The customer balance amount.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - customer_id
+                  - balance_id
+                  - amount
+                  - currency_code
+                properties:
+                  customer_id:
+                    type: string
+                  balance_id:
+                    type: string
+                  amount:
+                    type: string
+                    description: Balance current amount.
+                  currency_code:
+                    $ref: '#/components/schemas/CurrencyCode'
+        '403':
+          description: Access to server is forbidden.
+        '404':
+          description: The customer or the balance is not found.
+        '451':
+          description: The customer is not allowed access.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CurrencyCode:
+      title: Currency code.
+      description: ISO 4217 currency code.
+      type: string

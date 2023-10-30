@@ -1,0 +1,826 @@
+openapi: 3.0.3
+info:
+  title: QC internal balance API
+  version: '1.0'
+servers: [ ]
+paths:
+  /v1/b2b-gateway/users:
+    post:
+      summary: Registers a new user.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - country_code
+                - ip
+                - balance_currency_code
+              properties:
+                email:
+                  type: string
+                  description: User's email.
+                password:
+                  type: string
+                  description: User's password.
+                country_code:
+                  type: string
+                  description: User's registration country ISO 3166 alpha-2 code.
+                ip:
+                  type: string
+                  description: User's registration IP address.
+                balance_currency_code:
+                  type: string
+                  description: ISO 4217 currency code.
+                first_name:
+                  type: string
+                  description: User's first name.
+                last_name:
+                  type: string
+                  description: User's last name.
+                locale:
+                  type: string
+                  description: User's locale in format language_COUNTRY.
+      responses:
+        '201':
+          description: The user has been created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - email
+                  - password
+                  - country_code
+                  - locale
+                properties:
+                  id:
+                    type: integer
+                  email:
+                    type: string
+                  password:
+                    type: string
+                  country_code:
+                    type: string
+                  locale:
+                    type: string
+                  first_name:
+                    type: string
+                  last_name:
+                    type: string
+        '400':
+          description: The request payload is not valid.
+        '401':
+          description: Unauthorized. JWT token is not present or is not valid.
+        '403':
+          description: Access to server is forbidden.
+        '409':
+          description: The user already exists.
+        '422':
+          description: Unprocessable entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostUsersUnprocessableResponseEntityContent'
+        '429':
+          description: Too many requests.
+        '451':
+          description: The user is not allowed access.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserIsNotAllowedAccessResponseContent'
+              examples:
+                user_country_restriction:
+                  value:
+                    error: user_country_restriction
+                    message: The user's current country is not allowed.
+        '500':
+          description: Internal server error.
+
+  /v1/b2b-gateway/users/{user_id}/sessions:
+    parameters:
+      - "$ref": "#/components/parameters/user_id"
+    post:
+      summary: Create session.
+      description: Creates user's session.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - country_code
+                - ip
+                - user_agent
+                - platform_id
+              properties:
+                country_code:
+                  type: string
+                  description: Country ISO 3166 alpha-2 code detected by user's IP address.
+                ip:
+                  type: string
+                  description: The user's IP address.
+                user_agent:
+                  type: string
+                  description: The user's user agent. For bots we recommend to put bot name, bot version and bot strategy name.
+                platform_id:
+                  type: integer
+                  description: The user's client platform id.
+      responses:
+        '201':
+          description: User's session has been created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - ssid
+                properties:
+                  ssid:
+                    type: string
+                    description: The user's session ID.
+        '400':
+          description: The request payload is not valid.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access to server is forbidden.
+        '404':
+          description: The user is not found.
+        '422':
+          description: Unprocessable entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostUsersSessionsUnprocessableResponseEntityContent'
+        '429':
+          description: Too many requests.
+        '451':
+          description: The user is not allowed access.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserIsNotAllowedAccessResponseContent'
+              examples:
+                user_country_restriction:
+                  value:
+                    error: user_country_restriction
+                    message: The user's current country is not allowed.
+        '500':
+          description: Internal server error.
+
+  /v1/b2b-gateway/users/{user_id}/login-urls:
+    parameters:
+      - "$ref": "#/components/parameters/user_id"
+    post:
+      summary: Create onetime login URL.
+      description: Creates user's onetime login URL for create and store session in user's WEB-browser.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - country_code
+                - ip
+                - site_domain
+              properties:
+                country_code:
+                  type: string
+                  description: Country ISO 3166 alpha-2 code detected by user's IP address.
+                ip:
+                  type: string
+                  description: The user's IP address.
+                site_domain:
+                  type: string
+                  description: Site/mirror domain for URL.
+                  example: trade.brand-domain.com
+      responses:
+        '201':
+          description: User's session has been created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - url
+                properties:
+                  url:
+                    type: string
+                    description: The onetime URL for create user's session.
+        '400':
+          description: The request payload is not valid.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access to server is forbidden.
+        '404':
+          description: The user is not found.
+        '422':
+          description: Unprocessable entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostUsersLoginUrlsUnprocessableResponseEntityContent'
+        '429':
+          description: Too many requests.
+        '451':
+          description: The user is not allowed access.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserIsNotAllowedAccessResponseContent'
+              examples:
+                user_country_restriction:
+                  value:
+                    error: user_country_restriction
+                    message: The user's current country is not allowed.
+        '500':
+          description: Internal server error.
+
+  /v1/b2b-gateway/users/{user_id}/password:
+    parameters:
+      - "$ref": "#/components/parameters/user_id"
+    put:
+      summary: Update user's password.
+      description: Updates user's password.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - new_password
+              properties:
+                new_password:
+                  type: string
+      responses:
+        '200':
+          description: User's password has been updated.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access to server is forbidden.
+        '404':
+          description: The user is not found.
+        '422':
+          description: Unprocessable entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PutUsersPasswordUnprocessableResponseEntityContent'
+        '500':
+          description: Internal server error.
+
+  /v1/b2b-gateway/users/{user_id}/balances:
+    parameters:
+      - "$ref": "#/components/parameters/user_id"
+    get:
+      summary: Gets a balance list.
+      responses:
+        '200':
+          description: Returns user balance list.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - balances
+                properties:
+                  balances:
+                    $ref: '#/components/schemas/BalancesList'
+        '401':
+          description: Unauthorized. JWT token is not present or is not valid.
+        '403':
+          description: Access to server is forbidden.
+        '404':
+          description: The user is not found.
+        '500':
+          description: Internal server error.
+
+  /v1/b2b-gateway/users/{user_id}/balances/{balance_id}:
+    parameters:
+      - "$ref": "#/components/parameters/user_id"
+      - "$ref": "#/components/parameters/balance_id"
+    get:
+      summary: Gets balance and equity.
+      responses:
+        '200':
+          description: Returns user balance.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balance'
+        '401':
+          description: Unauthorized. JWT token is not present or is not valid.
+        '403':
+          description: Access to server is forbidden.
+        '404':
+          description: The user or the balance is not found.
+        '500':
+          description: Internal server error.
+
+  /v1/b2b-gateway/users/{user_id}/balances/{balance_id}/deposits:
+    parameters:
+      - "$ref": "#/components/parameters/user_id"
+      - "$ref": "#/components/parameters/balance_id"
+    post:
+      summary: Increases balance.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - request_id
+                - amount
+                - amount_currency_code
+              properties:
+                request_id:
+                  type: string
+                  description: Request ID for prevent double spent issue.
+                amount:
+                  type: string
+                  description: Decimal number with dot delimiter.
+                  example: "2.01"
+                amount_currency_code:
+                  type: string
+                  description: ISO 4217 currency code.
+      responses:
+        '201':
+          description: Deposit operation has been created.
+        '400':
+          description: Bad request.
+        '403':
+          description: Access to server is forbidden.
+        '404':
+          description: The user or the balance is not found.
+        '422':
+          description: Unprocessable entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostUsersBalancesDepositsUnprocessableResponseEntityContent'
+        '451':
+          description: The user is not allowed access.
+        '500':
+          description: Internal server error.
+
+  /v1/b2b-gateway/users/{user_id}/balances/{balance_id}/withdrawals:
+    parameters:
+      - "$ref": "#/components/parameters/user_id"
+      - "$ref": "#/components/parameters/balance_id"
+    post:
+      summary: Reduces balance.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - request_id
+                - amount
+                - amount_currency_code
+              properties:
+                request_id:
+                  type: string
+                  description: Request ID for prevent double spent issue.
+                amount:
+                  type: string
+                  description: Decimal number with dot delimiter.
+                  example: "2.01"
+                amount_currency_code:
+                  type: string
+                  description: ISO 4217 currency code.
+      responses:
+        '201':
+          description: Withdrawal operation has been created.
+        '400':
+          description: Bad request.
+        '402':
+          description: Insufficient funds.
+        '403':
+          description: Access to server is forbidden.
+        '404':
+          description: The user or the balance is not found.
+        '422':
+          description: Unprocessable entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostUsersBalancesWithdrawalsUnprocessableResponseEntityContent'
+        '451':
+          description: The user is not allowed access.
+        '500':
+          description: Internal server error.
+
+security:
+  - bearerAuth: [ ]
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    user_id:
+      name: user_id
+      description: Internal user id.
+      in: path
+      required: true
+      schema:
+        type: integer
+    balance_id:
+      name: balance_id
+      description: Internal balance id.
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  schemas:
+    Balance:
+      type: object
+      required:
+        - id
+        - user_id
+        - type
+        - currency_code
+        - cash
+        - equity
+        - margin
+        - pnl
+        - pnl_net
+      properties:
+        id:
+          type: integer
+          description: The balance id.
+        user_id:
+          type: integer
+          description: The balance user id.
+        type:
+          $ref: '#/components/schemas/BalanceType'
+        currency_code:
+          type: string
+          description: ISO 4217 currency code.
+        cash:
+          type: string
+          description: Decimal number with dot delimiter.
+          example: "2.01"
+        equity:
+          type: string
+          description: Decimal number with dot delimiter.
+          example: "2.01"
+        margin:
+          type: string
+          description: Decimal number with dot delimiter.
+          example: "2.01"
+        pnl:
+          type: string
+          description: Decimal number with dot delimiter.
+          example: "2.01"
+        pnl_net:
+          type: string
+          description: Decimal number with dot delimiter.
+          example: "2.01"
+
+    BalancesList:
+      type: array
+      items:
+        $ref: '#/components/schemas/BalancesListItem'
+
+    BalancesListItem:
+      type: object
+      required:
+        - id
+        - user_id
+        - type
+        - currency_code
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        type:
+          $ref: '#/components/schemas/BalanceType'
+        currency_code:
+          type: string
+          description: ISO 4217 currency code.
+
+    BalanceType:
+      type: string
+      description: The balance type.
+      enum:
+        - real
+        - demo
+
+    PostUsersBalancesDepositsUnprocessableResponseEntityContent:
+      type: object
+      properties:
+        request_id:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+            message:
+              type: string
+              description: Human readable error description.
+        amount:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+                - invalid_decimal_value
+                - negative_value
+            message:
+              type: string
+              description: Human readable error description.
+        amount_currency_code:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+                - unknown_currency_code
+            message:
+              type: string
+              description: Human readable error description.
+
+    PostUsersBalancesWithdrawalsUnprocessableResponseEntityContent:
+      type: object
+      properties:
+        request_id:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+            message:
+              type: string
+              description: Human readable error description.
+        amount:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+                - invalid_decimal_value
+                - negative_value
+            message:
+              type: string
+              description: Human readable error description.
+        amount_currency_code:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+                - unknown_currency_code
+            message:
+              type: string
+              description: Human readable error description.
+
+    PostUsersUnprocessableResponseEntityContent:
+      type: object
+      properties:
+        email:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+                - invalid_email_format
+            message:
+              type: string
+              description: Human readable error description.
+        password:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+            message:
+              type: string
+              description: Human readable error description.
+        country_code:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+                - unknown_country_code
+            message:
+              type: string
+              description: Human readable error description.
+        ip:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+                - invalid_ip_format
+            message:
+              type: string
+              description: Human readable error description.
+        balance_currency_code:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+                - unknown_currency_code
+            message:
+              type: string
+              description: Human readable error description.
+        locale:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - unknown_locale
+            message:
+              type: string
+              description: Human readable error description.
+
+    PostUsersSessionsUnprocessableResponseEntityContent:
+      type: object
+      properties:
+        country_code:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+                - unknown_country_code
+            message:
+              type: string
+        ip:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+                - invalid_ip_format
+            message:
+              type: string
+        user_agent:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+            message:
+              type: string
+        platform_id:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+            message:
+              type: string
+
+    PostUsersLoginUrlsUnprocessableResponseEntityContent:
+      type: object
+      properties:
+        country_code:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+                - unknown_country_code
+            message:
+              type: string
+        ip:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+                - invalid_ip_format
+            message:
+              type: string
+        site_domain:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+            message:
+              type: string
+
+    PutUsersPasswordUnprocessableResponseEntityContent:
+      type: object
+      properties:
+        new_password:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+            message:
+              type: string
+
+    UserIsNotAllowedAccessResponseContent:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code.
+          enum:
+            - user_country_restriction
+        message:
+          type: string
+          description: Human readable error description.
