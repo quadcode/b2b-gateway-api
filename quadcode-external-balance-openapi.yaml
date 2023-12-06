@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: QC external balance API
+  title: Quadcode system external balance API
   version: '1.0'
 servers: []
 paths:
