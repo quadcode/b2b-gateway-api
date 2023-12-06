@@ -151,7 +151,7 @@ paths:
                   description: The customer's IP address.
                 locale:
                   type: string
-                  description: Locale name (like en_US or ru_RU). If locale is not supported by QC system, then will be used fallback locale.
+                  description: Locale name (like en_US or ru_RU). If locale is not supported by Quadcode system, then will be used fallback locale.
                 site_domain:
                   type: string
                   description: Site/mirror domain for iframe URL.
