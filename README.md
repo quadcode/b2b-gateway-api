@@ -55,3 +55,106 @@ In server to server communications, in addition to authorization using the JWT t
 ## Limits on the number of requests per second
 
 The Quadcode API contracts check for the number of requests with the same value of `ip` or `user_id` properties in the request. If the limit on the number of requests per second is exceeded, the request will be rejected with the status code `429`.
+
+## Use cases for external balances configuration
+
+### User opens Traderoom for the first time
+
+```mermaid
+sequenceDiagram
+    participant user as "B2B client user"
+    participant B2BClientServers as "B2B client servers"
+    participant qcServers as "Quadcode servers"
+
+    user->>B2BClientServers: GET /page-with-iframe-to-traderoom
+    B2BClientServers->>qcServers: POST /v1/b2b-gateway/customers/{customer_id}/session
+    qcServers-->>B2BClientServers: HTTP/1.1 404 Not Found
+    B2BClientServers->>qcServers: POST /v1/b2b-gateway/customers
+    qcServers-->>B2BClientServers: HTTP/1.1 201 Created
+    B2BClientServers->>qcServers: POST /v1/b2b-gateway/customers/{customer_id}/session
+    qcServers-->>B2BClientServers: HTTP/1.1 201 Created {"url":"https://quadcode-frontend-server-domain/traderoom"}
+    B2BClientServers-->>user: HTTP/1.1 200 OK ...<iframe src="https://quadcode-frontend-server-domain/traderoom">...
+    user->>qcServers: GET https://quadcode-frontend-server-domain/traderoom
+    qcServers-->>user: HTTP/1.1 200 OK
+```
+
+### This is not the first time a user opens Traderoom
+
+```mermaid
+sequenceDiagram
+    participant user as "B2B client user"
+    participant B2BClientServers as "B2B client servers"
+    participant qcServers as "Quadcode servers"
+
+    user->>B2BClientServers: GET /page-with-iframe-to-traderoom
+    B2BClientServers->>qcServers: POST /v1/b2b-gateway/customers/{customer_id}/session
+    qcServers-->>B2BClientServers: HTTP/1.1 201 Created {"url":"https://quadcode-frontend-server-domain/traderoom"}
+    B2BClientServers-->>user: HTTP/1.1 200 OK ...<iframe src="https://quadcode-frontend-server-domain/traderoom">...
+    user->>qcServers: GET https://quadcode-frontend-server-domain/traderoom
+    qcServers-->>user: HTTP/1.1 200 OK
+```
+
+### A user from a restricted country opens Traderoom
+
+```mermaid
+sequenceDiagram
+    participant user as "B2B client user"
+    participant B2BClientServers as "B2B client servers"
+    participant qcServers as "Quadcode servers"
+
+    user->>B2BClientServers: GET /page-with-iframe-to-traderoom
+    B2BClientServers->>qcServers: POST /v1/b2b-gateway/customers/{customer_id}/session
+    qcServers-->>B2BClientServers: HTTP/1.1 451 Unavailable For Legal Reasons {"error":"customer_country_restriction"}
+    B2BClientServers-->>user: HTTP/1.1 200 OK ...Sorry. Your current country is not allowed access...
+```
+
+### Blocked user opens Traderoom
+
+```mermaid
+sequenceDiagram
+    participant user as "B2B client user"
+    participant B2BClientServers as "B2B client servers"
+    participant qcServers as "Quadcode servers"
+
+    user->>B2BClientServers: GET /page-with-iframe-to-traderoom
+    B2BClientServers->>qcServers: POST /v1/b2b-gateway/customers/{customer_id}/session
+    qcServers-->>B2BClientServers: HTTP/1.1 418 Customer is blocked
+    B2BClientServers-->>user: HTTP/1.1 200 OK ...Sorry. Your account is blocked...
+```
+
+### The user opens Traderoom and buys an option
+
+```mermaid
+sequenceDiagram
+    participant user as "B2B client user"
+    participant B2BClientServers as "B2B client servers"
+    participant qcServers as "Quadcode servers"
+
+    user->>B2BClientServers: GET /page-with-iframe-to-traderoom
+    B2BClientServers->>qcServers: POST /v1/b2b-gateway/customers/{customer_id}/session {"balance_id":"1234_USD","currency_code":"USD"}
+    qcServers-->>B2BClientServers: HTTP/1.1 201 Created {"url":"https://quadcode-frontend-server-domain/traderoom"}
+    B2BClientServers-->>user: HTTP/1.1 200 OK ...<iframe src="https://quadcode-frontend-server-domain/traderoom">...
+    user->>qcServers: GET https://quadcode-frontend-server-domain/traderoom
+    qcServers-->>user: HTTP/1.1 200 OK
+    user->>qcServers: get-balances
+    qcServers->>B2BClientServers: GET /v1/customers/{customer_id}/balances/{balance_id}
+    B2BClientServers-->>qcServers: HTTP/1.1 200 OK {..."amount": "100500","currency_code":"USD"...}
+    qcServers-->>user: balances
+    user->>qcServers: open-option
+    qcServers->>B2BClientServers: POST /v1/customers/{customer_id}/balances/{balance_id}/debit
+    B2BClientServers-->>qcServers: HTTP/1.1 201 Created
+    qcServers-->>user: option-created
+```
+
+### The option closed with a profit for the user
+
+```mermaid
+sequenceDiagram
+    participant user as "B2B client user"
+    participant qcServers as "Quadcode servers"
+    participant B2BClientServers as "B2B client servers"
+
+    qcServers->>B2BClientServers: POST /v1/customers/{customer_id}/balances/{balance_id}/credit
+    B2BClientServers-->>qcServers: HTTP/1.1 201 Created
+    qcServers-->>user: option-closed
+```
