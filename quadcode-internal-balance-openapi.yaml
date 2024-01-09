@@ -101,6 +101,26 @@ paths:
         '500':
           description: Internal server error.
 
+  '/v1/b2b-gateway/users/{user_id}/block':
+    parameters:
+      - "$ref": "#/components/parameters/user_id"
+    post:
+      summary: Block user's account.
+      description: Disable user's account.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The user is disabled successfully.
+        '401':
+          description: Unauthorized. JWT token is not present or is not valid.
+        '403':
+          description: Access to server is forbidden.
+        '404':
+          description: The user is not found.
+        '500':
+          description: Internal server error.
+
   /v1/b2b-gateway/users/{user_id}/sessions:
     parameters:
       - "$ref": "#/components/parameters/user_id"
