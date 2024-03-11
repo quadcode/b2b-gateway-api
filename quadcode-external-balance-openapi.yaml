@@ -2,14 +2,14 @@ openapi: 3.0.3
 info:
   title: Quadcode system external balance API
   version: '1.0'
-servers: []
+servers: [ ]
 paths:
   /v1/b2b-gateway/customers:
     post:
       summary: Create a new customer.
       description: Register a new customer.
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       requestBody:
         content:
           application/json:
@@ -99,7 +99,7 @@ paths:
       summary: Block customer's account.
       description: Disable customer's account.
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       responses:
         '200':
           description: The customer is disabled successfully.
@@ -122,7 +122,7 @@ paths:
       summary: Create onetime login URL.
       description: Creates user's session and returns onetime login URL for HTML iframe located on the client's site.
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       requestBody:
         description: Payload to build URL for HTML iframe.
         content:
@@ -204,11 +204,90 @@ paths:
                     message: The customer's balance currency is not allowed.
         '500':
           description: Internal server error.
+  /v1/b2b-gateway/customers/{customer_id}/sessions:
+    parameters:
+      - schema:
+          type: string
+        name: customer_id
+        in: path
+        required: true
+    post:
+      summary: Create session.
+      description: Creates customer's session.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - country_code
+                - ip
+                - user_agent
+                - platform_id
+              properties:
+                country_code:
+                  type: string
+                  description: Country ISO 3166 alpha-2 code detected by user's IP address.
+                ip:
+                  type: string
+                  description: The user's IP address.
+                user_agent:
+                  type: string
+                  description: The user's user agent. For bots we recommend to put bot name, bot version and bot strategy name.
+                platform_id:
+                  type: integer
+                  description: The user's client platform id.
+      responses:
+        '201':
+          description: Customer's session has been created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - ssid
+                properties:
+                  ssid:
+                    type: string
+                    description: The customer's session ID.
+        '400':
+          description: The request payload is not valid.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access to server is forbidden.
+        '404':
+          description: The customer is not found.
+        '422':
+          description: Unprocessable entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostCustomersSessionsUnprocessableResponseEntityContent'
+        '429':
+          description: Too many requests.
+        '451':
+          description: The customer is not allowed access.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerIsNotAllowedAccessResponseContent'
+              examples:
+                customer_country_restriction:
+                  value:
+                    error: customer_country_restriction
+                    message: The customer's current country is not allowed.
+                customer_currency_restriction:
+                  value:
+                    error: customer_currency_restriction
+                    message: The customer's balance currency is not allowed.
+        '500':
+          description: Internal server error.
   '/v1/b2b-gateway/allowed-countries':
     get:
       summary: Get countries allowed to access.
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       responses:
         '200':
           description: Countries allowed to access.
@@ -399,3 +478,56 @@ components:
         iso_code:
           type: string
           description: Three symbols country ISO 3166 alpha-3 code.
+    PostCustomersSessionsUnprocessableResponseEntityContent:
+      type: object
+      properties:
+        country_code:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+                - unknown_country_code
+            message:
+              type: string
+        ip:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+                - invalid_ip_format
+            message:
+              type: string
+        user_agent:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+            message:
+              type: string
+        platform_id:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - is_required
+            message:
+              type: string
