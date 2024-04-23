@@ -43,6 +43,9 @@ paths:
                 comment:
                   type: string
                   description: The reason to debit funds.
+                force:
+                  type: boolean
+                  description: Subtract to zero if balance has insufficient funds.
       responses:
         '201':
           description: Debit operation has been successfully done.
@@ -57,6 +60,8 @@ paths:
                   - balance_current_amount
                   - currency_code
                 properties:
+                  operation_id:
+                    type: integer
                   customer_id:
                     type: string
                   balance_id:
@@ -69,6 +74,9 @@ paths:
                     description: The balance amount after debit operation.
                   currency_code:
                     $ref: '#/components/schemas/CurrencyCode'
+                  realized_amount:
+                    type: string
+                    description: Debited amount in fact. Usually equals to amount property if force=false. Can be less than amount if force=true.
         '400':
           description: Bad request.
         '402':
@@ -132,6 +140,8 @@ paths:
                   - balance_current_amount
                   - currency_code
                 properties:
+                  operation_id:
+                    type: integer
                   customer_id:
                     type: string
                   balance_id:

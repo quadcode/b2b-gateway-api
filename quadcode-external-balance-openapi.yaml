@@ -309,6 +309,61 @@ paths:
           description: Access to server is forbidden.
         '500':
           description: Internal server error.
+  '/v1/b2b-gateway/customers/{customer_id}/balances/{external_balance_id}':
+    put:
+      summary: Update balance state.
+      description: Notification about balance state was changed.
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+                - amount_currency_code
+                - updated_at
+              properties:
+                amount:
+                  type: string
+                amount_currency_code:
+                  type: string
+                updated_at:
+                  type: integer
+                  description: Unix time with microsecond precision
+      responses:
+        '200':
+          description: Balance state has been updated.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access to server is forbidden.
+        '500':
+          description: Internal server error.
+  '/v1/b2b-gateway/customers/{customer_id}/balances/{external_balance_id}/available-withdrawal-amount':
+    get:
+      summary: Returns maximum amount what user can withdraw from balance.
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Available withdrawal amount
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - amount
+                properties:
+                  amount:
+                    type: string
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Access to server is forbidden.
+        '500':
+          description: Internal server error.
 components:
   securitySchemes:
     bearerAuth:
