@@ -143,6 +143,13 @@ paths:
                 balance_currency_code:
                   type: string
                   description: The customer's balance currency code.
+                balance_type:
+                  type: string
+                  default: real
+                  description: The customer's balance type.
+                  enum:
+                    - real
+                    - demo
                 country_code:
                   type: string
                   description: Country ISO 3166 alpha-2 code detected by customer's IP address.
