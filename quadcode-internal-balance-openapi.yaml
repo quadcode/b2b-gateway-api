@@ -43,6 +43,15 @@ paths:
                 locale:
                   type: string
                   description: User's locale in format language_COUNTRY.
+                aff_id:
+                  type: integer
+                  description: User's affiliate ID.
+                aff_model:
+                  type: string
+                  description: User's affiliate model.
+                aff_track:
+                  type: string
+                  description: User's affiliate tracking.
       responses:
         '201':
           description: The user has been created.
