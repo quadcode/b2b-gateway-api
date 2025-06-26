@@ -58,6 +58,8 @@ The Quadcode API contracts check for the number of requests with the same value 
 
 ## Use cases for external balances configuration
 
+[OpenAPI specification](quadcode-external-balance-openapi.yaml).
+
 ### User opens Traderoom for the first time
 
 ```mermaid
@@ -157,4 +159,78 @@ sequenceDiagram
     qcServers->>B2BClientServers: POST /v1/customers/{customer_id}/balances/{balance_id}/credit
     B2BClientServers-->>qcServers: HTTP/1.1 201 Created
     qcServers-->>user: option-closed
+```
+
+## Use cases for internal balances configuration
+
+[OpenAPI specification](quadcode-internal-balance-openapi.yaml).
+
+### When the user wants to create an account
+
+```mermaid
+sequenceDiagram
+    participant user as "B2B client user"
+    participant B2BClientServers as "B2B client servers"
+    participant qcServers as "Quadcode servers"
+
+    user->>B2BClientServers: GET /page-with-registration-form (method and path can be any)
+    B2BClientServers->>user: 200 OK with HTML content of registration form
+    user->>B2BClientServers: POST /registration-form-handler (method and path can be any)
+    B2BClientServers->>qcServers: POST /v1/b2b-gateway/users
+    qcServers-->>B2BClientServers: 201 Created with JSON content: {id: 12345, ...}
+    B2BClientServers->>user: 200 OK with HTML content of successful registration message
+```
+
+### When the user wants to deposit funds and deposit is processed successfully
+
+```mermaid
+sequenceDiagram
+    participant user as "B2B client user"
+    participant B2BClientServers as "B2B client servers"
+    participant qcServers as "Quadcode servers"
+
+    user->>B2BClientServers: GET /deposit-page (method and path can be any)
+    B2BClientServers->>qcServers: GET /v1/b2b-gateway/users/{user_id}/balances (for instance, user_id=12345)
+    qcServers-->>B2BClientServers: 200 OK with JSON content: {balances: [{id: 112233, user_id: 12345, type: real, currency_code: USD}, ...]}
+    B2BClientServers->>user: 200 OK with HTML content of deposit page
+    user->>B2BClientServers: POST /deposit-page-handler (method and path can be any) with JSON body: {balance_id=112233, amount=100, ...}
+    B2BClientServers->>B2BClientServers: Process deposit
+    B2BClientServers->>qcServers: POST /v1/b2b-gateway/users/{user_id}/balances/{balance_id}/deposits (user_id=12345, balance_id=112233) with JSON body: {request_id: some-idempotency-key, amount: 100, amount_currency_code: USD}
+    qcServers-->>B2BClientServers: 201 Created
+```
+
+### When the user wants to withdraw funds and withdrawal is processed successfully
+
+```mermaid
+sequenceDiagram
+    participant user as "B2B client user"
+    participant B2BClientServers as "B2B client servers"
+    participant qcServers as "Quadcode servers"
+
+    user->>B2BClientServers: GET /withdrawal-page (method and path can be any)
+    B2BClientServers->>qcServers: GET /v1/b2b-gateway/users/{user_id}/balances (for instance, user_id=12345)
+    qcServers-->>B2BClientServers: 200 OK with JSON content: {balances: [{id: 112233, user_id: 12345, type: real, currency_code: USD}, ...]}
+    B2BClientServers->>user: 200 OK with HTML content of withdrawal page
+    user->>B2BClientServers: POST /withdrawal-page-handler (method and path can be any) with JSON body: {balance_id=112233, amount=100, ...}
+    B2BClientServers->>qcServers: POST /v1/b2b-gateway/users/{user_id}/balances/{balance_id}/withdrawals (user_id=12345, balance_id=112233) with JSON body: {request_id: some-idempotency-key, amount: 100, amount_currency_code: USD}
+    qcServers-->>B2BClientServers: 201 Created
+    B2BClientServers->>B2BClientServers: Process withdrawal
+```
+
+### When the user wants to withdraw funds and user's balance has insufficient funds
+
+```mermaid
+sequenceDiagram
+    participant user as "B2B client user"
+    participant B2BClientServers as "B2B client servers"
+    participant qcServers as "Quadcode servers"
+
+    user->>B2BClientServers: GET /withdrawal-page (method and path can be any)
+    B2BClientServers->>qcServers: GET /v1/b2b-gateway/users/{user_id}/balances (for instance, user_id=12345)
+    qcServers-->>B2BClientServers: 200 OK with JSON content: {balances: [{id: 112233, user_id: 12345, type: real, currency_code: USD}, ...]}
+    B2BClientServers->>user: 200 OK with HTML content of withdrawal page
+    user->>B2BClientServers: POST /withdrawal-page-handler (method and path can be any) with JSON body: {balance_id=112233, amount=100, ...}
+    B2BClientServers->>qcServers: POST /v1/b2b-gateway/users/{user_id}/balances/{balance_id}/withdrawals (user_id=12345, balance_id=112233) with JSON body: {request_id: some-idempotency-key, amount: 100, amount_currency_code: USD}
+    qcServers-->>B2BClientServers: 402 Insufficient funds
+    B2BClientServers->>user: 200 OK with HTML content of 'Insufficient funds' message
 ```
