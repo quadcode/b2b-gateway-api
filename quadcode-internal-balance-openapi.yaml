@@ -197,6 +197,48 @@ paths:
         '500':
           description: Internal server error.
 
+  '/v1/b2b-gateway/users/{user_id}/belongs-to-labels':
+    parameters:
+      - "$ref": "#/components/parameters/user_id"
+    post:
+      summary: Checks user has any of specified labels.
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - labels
+              properties:
+                labels:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Returns true if user has at least one specified label.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - result
+                properties:
+                  result:
+                    type: boolean
+        '400':
+          description: The request payload is not valid.
+        '401':
+          description: Unauthorized. JWT token is not present or is not valid.
+        '403':
+          description: Access to server is forbidden.
+        '404':
+          description: The user is not found.
+        '500':
+          description: Internal server error.
+
   /v1/b2b-gateway/users/{user_id}/sessions:
     parameters:
       - "$ref": "#/components/parameters/user_id"
