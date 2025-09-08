@@ -251,7 +251,7 @@ paths:
             schema:
               type: object
               required:
-                -labels
+                - labels
               properties:
                 labels:
                   type: array
