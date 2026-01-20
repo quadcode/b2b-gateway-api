@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: B2B client external balance API
   version: '1.0'
-servers: []
+servers: [ ]
 paths:
   '/v1/customers/{customer_id}/balances/{balance_id}/debit':
     parameters:
@@ -20,7 +20,7 @@ paths:
       summary: Debit funds.
       description: Subtract some funds from customer's balance.
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       requestBody:
         content:
           application/json:
@@ -28,6 +28,7 @@ paths:
               type: object
               required:
                 - request_id
+                - entity_id
                 - amount
                 - currency_code
                 - comment
@@ -35,6 +36,9 @@ paths:
                 request_id:
                   type: string
                   description: Request ID for request idempotency.
+                entity_id:
+                  type: integer
+                  description: The ID of the entity performing the debit operation.
                 amount:
                   type: string
                   description: Amount for debit.
@@ -95,7 +99,7 @@ paths:
       summary: Credit funds.
       description: Add some funds to customer's balance.
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       requestBody:
         content:
           application/json:
@@ -103,6 +107,7 @@ paths:
               type: object
               required:
                 - request_id
+                - entity_id
                 - amount
                 - currency_code
                 - comment
@@ -110,6 +115,9 @@ paths:
                 request_id:
                   type: string
                   description: Request ID for request idempotency.
+                entity_id:
+                  type: integer
+                  description: The ID of the entity performing the debit operation.
                 amount:
                   type: string
                   description: Amount for credit.
@@ -168,7 +176,7 @@ paths:
       summary: Get the customer balance amount.
       description: Retrieve the information of the customer balance.
       security:
-        - bearerAuth: []
+        - bearerAuth: [ ]
       responses:
         '200':
           description: The customer balance amount.
