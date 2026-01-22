@@ -239,6 +239,38 @@ paths:
         '500':
           description: Internal server error.
 
+  /v1/b2b-gateway/users/{user_id}/unset-labels:
+    parameters:
+      - "$ref": "#/components/parameters/user_id"
+    post:
+      summary: Unset all user labels.
+      description: Unset user labels.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - labels
+              properties:
+                labels:
+                  type: array
+                  items:
+                    type: string
+                  description: List of user labels to unset.
+                is_manual:
+                  type: boolean
+                  description: Whether the labels are being unset manually.
+      responses:
+        '200':
+          description: The user labels have been unset successfully.
+        '400':
+          description: The request payload is not valid.
+        '404':
+          description: The user is not found.
+        '500':
+          description: Internal server error.
+
   /v1/b2b-gateway/users/{user_id}/sessions:
     parameters:
       - "$ref": "#/components/parameters/user_id"
