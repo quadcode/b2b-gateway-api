@@ -239,9 +239,7 @@ paths:
         '500':
           description: Internal server error.
 
-  /v1/b2b-gateway/users/{user_id}/unset-labels:
-    parameters:
-      - "$ref": "#/components/parameters/user_id"
+  /b2b-gateway/user-labels.v1/unset:
     post:
       summary: Unset all user labels.
       description: Unset user labels.
@@ -251,8 +249,12 @@ paths:
             schema:
               type: object
               required:
+                - user_id
                 - labels
               properties:
+                user_id:
+                  type: integer
+                  description: Internal user id.
                 labels:
                   type: array
                   items:
